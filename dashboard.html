@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Solicitudes de Diseño — Connecta B2B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F3EE; --surface:#FFFFFF; --ink:#23262F; --ink-soft:#6B6F76; --border:#E4E1D8;
+    --urgent:#C6432E; --urgent-bg:#FBE9E5; --progress:#2F6F5E; --progress-bg:#E5F0EC;
+    --myt:#2451A3; --myt-bg:#E7EEF9; --itnow:#6D3FA0; --itnow-bg:#EFE7F7;
+    --construir:#B5651D; --construir-bg:#F6E9DC; --pending:#9A8C5B; --pending-bg:#F1EEE1;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1400px;margin:0 auto;padding:28px 24px 60px;}
+
+  header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:20px;}
+  .title-block h1{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;margin:0 0 4px;letter-spacing:-0.01em;}
+  .title-block p{margin:0;color:var(--ink-soft);font-size:13.5px;}
+  .sync-status{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink-soft);}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--progress);flex-shrink:0;}
+  .dot.off{background:var(--urgent);}
+  button.refresh{
+    border:1px solid var(--border);background:var(--surface);color:var(--ink);
+    padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;
+    display:flex;align-items:center;gap:6px;font-family:inherit;
+  }
+  button.refresh:hover{border-color:var(--ink);}
+
+  .error-banner{
+    display:none;background:var(--urgent-bg);border:1px solid var(--urgent);color:var(--urgent);
+    padding:12px 16px;border-radius:10px;margin-bottom:18px;font-size:13px;font-weight:500;
+  }
+  .error-banner.show{display:block;}
+
+  .summary{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+  .summary .stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;min-width:120px;}
+  .summary .stat .n{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;}
+  .summary .stat .l{font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+
+  .filters{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:22px;align-items:flex-start;}
+  .filter-block{display:flex;flex-direction:column;gap:6px;}
+  .filter-block .flabel{font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+  .filters input[type=text]{padding:9px 13px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:inherit;min-width:200px;background:var(--surface);}
+  .chip-group{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{padding:6px 12px;border-radius:100px;border:1px solid var(--border);background:var(--surface);font-size:12.5px;cursor:pointer;user-select:none;color:var(--ink-soft);font-weight:500;}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .board{display:flex;gap:16px;overflow-x:auto;padding-bottom:10px;}
+  .column{min-width:300px;flex:1;}
+  .col-head{display:flex;justify-content:space-between;align-items:center;padding:0 4px 12px;}
+  .col-head .name{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14.5px;}
+  .col-head .count{background:var(--surface);border:1px solid var(--border);border-radius:100px;font-size:11.5px;padding:2px 9px;color:var(--ink-soft);}
+  .col-bar{height:3px;border-radius:3px;margin-bottom:12px;}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
+  .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .sid{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);}
+  .badge{font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:100px;white-space:nowrap;}
+  .b-myt{background:var(--myt-bg);color:var(--myt);}
+  .b-itnow{background:var(--itnow-bg);color:var(--itnow);}
+  .b-construir{background:var(--construir-bg);color:var(--construir);}
+  .b-other{background:var(--pending-bg);color:var(--pending);}
+
+  .card .solicitante{font-weight:600;font-size:14px;margin-bottom:4px;}
+  .card .material{font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;line-height:1.4;}
+  .tag-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+  .tag{font-size:10.5px;background:var(--bg);border:1px solid var(--border);padding:2px 7px;border-radius:5px;color:var(--ink-soft);}
+
+  .meta-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;}
+  .deadline{font-size:11.5px;font-family:'IBM Plex Mono',monospace;padding:3px 8px;border-radius:6px;font-weight:500;}
+  .d-ok{background:var(--progress-bg);color:var(--progress);}
+  .d-warn{background:#FBF3DC;color:#8A6D1D;}
+  .d-late{background:var(--urgent-bg);color:var(--urgent);}
+  .urgent-flag{font-size:11px;font-weight:600;color:var(--urgent);display:flex;align-items:center;gap:4px;}
+
+  .justif{font-size:11.5px;color:var(--ink-soft);background:var(--bg);border-radius:7px;padding:8px 9px;margin-bottom:10px;line-height:1.4;font-style:italic;}
+
+  .toggle-detail{width:100%;background:none;border:none;border-top:1px dashed var(--border);padding:8px 0 4px;margin-top:4px;font-size:11.5px;color:var(--ink-soft);cursor:pointer;font-family:inherit;font-weight:600;display:flex;justify-content:center;gap:5px;}
+  .toggle-detail:hover{color:var(--ink);}
+  .detail-panel{display:none;padding-top:10px;margin-bottom:8px;}
+  .detail-panel.open{display:block;}
+  .detail-row{margin-bottom:9px;}
+  .detail-row .dlabel{font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;}
+  .detail-row .dval{font-size:12.5px;line-height:1.45;white-space:pre-wrap;}
+  .detail-row .dval a{color:var(--myt);text-decoration:none;word-break:break-all;}
+  .detail-row .dval a:hover{text-decoration:underline;}
+  .detail-row .dval.empty{color:var(--ink-soft);font-style:italic;}
+  .detail-links a{display:block;margin-bottom:3px;}
+
+  .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .edit-grid .full{grid-column:1 / -1;}
+  .edit-grid label{font-size:10px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:3px;}
+  .edit-grid select,.edit-grid input{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;font-family:inherit;background:var(--bg);color:var(--ink);}
+  .save-state{font-size:11px;margin-top:6px;min-height:14px;color:var(--progress);font-weight:500;}
+  .save-state.err{color:var(--urgent);}
+
+  .empty-col{border:1.5px dashed var(--border);border-radius:12px;padding:24px 12px;text-align:center;color:var(--ink-soft);font-size:12.5px;}
+  .empty-state{text-align:center;padding:60px 20px;color:var(--ink-soft);font-size:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <h1>Solicitudes de Diseño</h1>
+      <p>Connecta B2B — MyT · It Now · Construir</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="sync-status"><span class="dot" id="syncDot"></span><span id="syncText">Sin conectar</span></div>
+      <button class="refresh" id="refreshBtn">↻ Actualizar</button>
+    </div>
+  </header>
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="filters">
+    <div class="filter-block">
+      <span class="flabel">Buscar</span>
+      <input type="text" id="searchBox" placeholder="Nombre, material o ID...">
+    </div>
+    <div class="filter-block">
+      <span class="flabel">Comunidad</span>
+      <div class="chip-group" id="comunidadFilter"></div>
+    </div>
+    <div class="filter-block">
+      <span class="flabel">Prioridad</span>
+      <div class="chip-group" id="prioridadFilter"></div>
+    </div>
+    <div class="filter-block">
+      <span class="flabel">Estatus</span>
+      <div class="chip-group" id="estatusFilter"></div>
+    </div>
+    <div class="filter-block">
+      <span class="flabel">Responsable</span>
+      <div class="chip-group" id="responsableFilter"></div>
+    </div>
+  </div>
+
+  <div class="board" id="board">
+    <div class="empty-state">Cargando...</div>
+  </div>
+
+</div>
+
+<script>
+const CONFIG = {
+  API_URL: 'https://script.google.com/macros/s/AKfycbwvGEdn_ZCcwuInTdOV_Vaj3bj9bZXNDaSFhhRJ8NN1PC_YXY2fxXCgF9ytAuopaDkD/exec'
+};
+
+let ALL_ROWS = [];
+let ACTIVE_COMUNIDAD = null;
+let ACTIVE_PRIORIDAD = null;
+let ACTIVE_RESPONSABLE = null;
+let ACTIVE_ESTATUS = null;
+
+const STATUS_ORDER = ['Pendiente','En Proceso','Finalizado'];
+const STATUS_COLORS = { 'Pendiente':'var(--pending)', 'En Proceso':'#B5811D', 'Finalizado':'var(--progress)' };
+
+function showError(msg){
+  const el = document.getElementById('errorBanner');
+  if(!msg){ el.classList.remove('show'); el.textContent=''; return; }
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('show');
+}
+
+function comunidadBadgeClass(c){
+  if(!c) return 'b-other';
+  const s = c.toLowerCase();
+  if(s.includes('myt')) return 'b-myt';
+  if(s.includes('it now') || s.includes('itnow')) return 'b-itnow';
+  if(s.includes('construir')) return 'b-construir';
+  return 'b-other';
+}
+
+function parseFlexibleDate(str){
+  if(!str) return null;
+  str = String(str).trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(str)){
+    const d = new Date(str);
+    if(!isNaN(d.getTime())) return d;
+  }
+  const m = str.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+  if(m){
+    const d = new Date(parseInt(m[3]), parseInt(m[2])-1, parseInt(m[1]));
+    if(!isNaN(d.getTime())) return d;
+  }
+  const fallback = new Date(str);
+  return isNaN(fallback.getTime()) ? null : fallback;
+}
+
+function formatDateDisplay(d){
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return `${dd}-${mm}-${d.getFullYear()}`;
+}
+
+function daysUntil(dateStr){
+  const d = parseFlexibleDate(dateStr);
+  if(!d) return null;
+  d.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((d - today) / 86400000);
+}
+
+function deadlineChip(dateStr){
+  const d = parseFlexibleDate(dateStr);
+  if(!d) return '<span class="deadline d-ok">Sin fecha</span>';
+  const days = daysUntil(dateStr);
+  const dateLabel = formatDateDisplay(d);
+  let cls = 'd-ok', tag = `${days}d`;
+  if(days < 0){ cls='d-late'; tag = `Vencido ${Math.abs(days)}d`; }
+  else if(days <= 2){ cls='d-late'; tag = `${days}d — urgente`; }
+  else if(days <= 5){ cls='d-warn'; tag = `${days}d`; }
+  return `<span class="deadline ${cls}">${dateLabel} · ${tag}</span>`;
+}
+
+async function fetchData(){
+  setSync(false, 'Sincronizando...');
+  try{
+    const res = await fetch(CONFIG.API_URL + '?action=list');
+    const json = await res.json();
+    if(!json.success) throw new Error(json.message||'Error desconocido');
+    ALL_ROWS = json.rows;
+    showError(null);
+    setSync(true, `Sincronizado ${new Date().toLocaleTimeString('es-GT')} · pestaña: ${json.sheet}`);
+    render();
+  }catch(err){
+    setSync(false, 'Error de conexión');
+    showError('No se pudo leer la hoja: ' + err.message);
+    console.error(err);
+  }
+}
+
+function setSync(ok, text){
+  document.getElementById('syncDot').className = 'dot' + (ok?'':' off');
+  document.getElementById('syncText').textContent = text;
+}
+
+async function pushUpdate(id, field, value, cardEl){
+  const stateEl = cardEl.querySelector('.save-state');
+  stateEl.textContent = 'Guardando...'; stateEl.className='save-state';
+  try{
+    const url = `${CONFIG.API_URL}?action=update&id=${encodeURIComponent(id)}&field=${encodeURIComponent(field)}&value=${encodeURIComponent(value)}`;
+    const res = await fetch(url);
+    const json = await res.json();
+    if(!json.success) throw new Error(json.message || 'Error desconocido');
+    stateEl.textContent = `Guardado ✓ (fila ${json.row}, valor en la hoja: "${json.valorGuardado}")`; stateEl.className='save-state';
+    const row = ALL_ROWS.find(r => String(r['Submission ID']).trim() === String(id).trim());
+    if(row) row[field] = value;
+    setTimeout(()=>{ if(stateEl) stateEl.textContent=''; }, 3000);
+  }catch(err){
+    stateEl.textContent = '✕ No se pudo guardar: ' + err.message; stateEl.className='save-state err';
+    console.error(err);
+  }
+}
+
+function distinctValues(field){
+  return [...new Set(ALL_ROWS.map(r=>r[field]).filter(Boolean))];
+}
+
+function renderFilters(){
+  const comunidades = distinctValues('Para que comunidad?');
+  const comEl = document.getElementById('comunidadFilter');
+  comEl.innerHTML = comunidades.map(c=>`<div class="chip ${ACTIVE_COMUNIDAD===c?'active':''}" data-com="${c}">${c}</div>`).join('');
+  comEl.querySelectorAll('.chip').forEach(el=>el.onclick=()=>{
+    ACTIVE_COMUNIDAD = ACTIVE_COMUNIDAD === el.dataset.com ? null : el.dataset.com;
+    render();
+  });
+
+  const prioridades = ['Alta','Media','Baja'];
+  const prEl = document.getElementById('prioridadFilter');
+  prEl.innerHTML = prioridades.map(p=>`<div class="chip ${ACTIVE_PRIORIDAD===p?'active':''}" data-pr="${p}">${p}</div>`).join('');
+  prEl.querySelectorAll('.chip').forEach(el=>el.onclick=()=>{
+    ACTIVE_PRIORIDAD = ACTIVE_PRIORIDAD === el.dataset.pr ? null : el.dataset.pr;
+    render();
+  });
+
+  const estEl = document.getElementById('estatusFilter');
+  estEl.innerHTML = STATUS_ORDER.map(s=>`<div class="chip ${ACTIVE_ESTATUS===s?'active':''}" data-est="${s}">${s}</div>`).join('');
+  estEl.querySelectorAll('.chip').forEach(el=>el.onclick=()=>{
+    ACTIVE_ESTATUS = ACTIVE_ESTATUS === el.dataset.est ? null : el.dataset.est;
+    render();
+  });
+
+  const responsables = distinctValues('Responsable');
+  const hasUnassigned = ALL_ROWS.some(r => !r['Responsable']);
+  const respEl = document.getElementById('responsableFilter');
+  respEl.innerHTML =
+    (hasUnassigned ? `<div class="chip ${ACTIVE_RESPONSABLE==='__unassigned__'?'active':''}" data-resp="__unassigned__">Sin asignar</div>` : '') +
+    responsables.map(r=>`<div class="chip ${ACTIVE_RESPONSABLE===r?'active':''}" data-resp="${r}">${r}</div>`).join('');
+  respEl.querySelectorAll('.chip').forEach(el=>el.onclick=()=>{
+    ACTIVE_RESPONSABLE = ACTIVE_RESPONSABLE === el.dataset.resp ? null : el.dataset.resp;
+    render();
+  });
+}
+
+function renderSummary(rows){
+  const total = rows.length;
+  const urgentes = rows.filter(r=>r['¿Es un requerimiento de Alta Prioridad?']==='Sí' && r['Estatus']!=='Finalizado').length;
+  const pendientes = rows.filter(r=>(r['Estatus']||'Pendiente')!=='Finalizado').length;
+  const finalizados = rows.filter(r=>r['Estatus']==='Finalizado').length;
+  document.getElementById('summary').innerHTML = `
+    <div class="stat"><div class="n">${total}</div><div class="l">Total</div></div>
+    <div class="stat"><div class="n" style="color:var(--urgent)">${urgentes}</div><div class="l">Urgentes abiertas</div></div>
+    <div class="stat"><div class="n" style="color:var(--pending)">${pendientes}</div><div class="l">En curso</div></div>
+    <div class="stat"><div class="n" style="color:var(--progress)">${finalizados}</div><div class="l">Finalizadas</div></div>
+  `;
+}
+
+function filteredRows(){
+  const q = document.getElementById('searchBox').value.trim().toLowerCase();
+  return ALL_ROWS.filter(r=>{
+    if(ACTIVE_COMUNIDAD && r['Para que comunidad?'] !== ACTIVE_COMUNIDAD) return false;
+    if(ACTIVE_PRIORIDAD && r['Prioridad'] !== ACTIVE_PRIORIDAD) return false;
+    if(ACTIVE_RESPONSABLE === '__unassigned__' && r['Responsable']) return false;
+    if(ACTIVE_RESPONSABLE && ACTIVE_RESPONSABLE !== '__unassigned__' && r['Responsable'] !== ACTIVE_RESPONSABLE) return false;
+    const rowEstatus = STATUS_ORDER.includes(r['Estatus']) ? r['Estatus'] : 'Pendiente';
+    if(ACTIVE_ESTATUS && rowEstatus !== ACTIVE_ESTATUS) return false;
+    if(q){
+      const hay = `${r['Nombre del Solicitante']} ${r['Material a solicitar']} ${r['Submission ID']}`.toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function materialTags(r){
+  const fields = ['Materiales Impreso para eventos','Audiovisual','Post para Redes Sociales','Banner'];
+  return fields.filter(f=>r[f]).map(f=>`<span class="tag">${r[f]}</span>`).join('');
+}
+
+function responsableOptions(current){
+  const opts = distinctValues('Responsable');
+  if(current && !opts.includes(current)) opts.push(current);
+  return opts;
+}
+
+function linkListHTML(text){
+  if(!text) return '<span class="dval empty">Sin adjuntos</span>';
+  const links = text.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+  return `<div class="dval detail-links">${links.map(l=>
+    /^https?:\/\//.test(l) ? `<a href="${l}" target="_blank" rel="noopener">${l}</a>` : `<div>${l}</div>`
+  ).join('')}</div>`;
+}
+
+function detailRow(label, value, isLinks){
+  if(isLinks) return `<div class="detail-row"><div class="dlabel">${label}</div>${linkListHTML(value)}</div>`;
+  const val = value ? `<div class="dval">${value}</div>` : `<div class="dval empty">Sin datos</div>`;
+  return `<div class="detail-row"><div class="dlabel">${label}</div>${val}</div>`;
+}
+
+function detailPanelHTML(r){
+  const medida = r['Medida o Dimensiones Exacta']
+    ? `${r['Medida o Dimensiones Exacta']}${r['Esta medida esta expresada en? '] ? ' ' + r['Esta medida esta expresada en? '] : ''}`
+    : '';
+  return `
+    <div class="detail-panel">
+      ${detailRow('Submission ID completo', r['Submission ID'])}
+      ${detailRow('Correo de contacto', r['Correo electrónico de contacto'])}
+      ${detailRow('Medida / Dimensiones', medida)}
+      ${detailRow('Textos definitivos (copy)', r['Textos definitivos (copy/copies)'])}
+      ${detailRow('Material de apoyo adjunto', r['Adjuntar material de apoyo'], true)}
+      ${detailRow('Elementos de marca obligatorios', r['Elementos de marca obligatorios'])}
+      ${detailRow('Observaciones adicionales', r['Observaciones adicionales'])}
+    </div>`;
+}
+
+function cardHTML(r){
+  const id = r['Submission ID'];
+  const estatus = r['Estatus'] || 'Pendiente';
+  const isUrgent = r['¿Es un requerimiento de Alta Prioridad?'] === 'Sí';
+  const priOpts = ['Alta','Media','Baja'];
+  const statusOpts = STATUS_ORDER;
+
+  return `
+  <div class="card" data-id="${id}">
+    <div class="card-top">
+      <span class="sid">#${id ? String(id).slice(-6) : '—'}</span>
+      <span class="badge ${comunidadBadgeClass(r['Para que comunidad?'])}">${r['Para que comunidad?']||'—'}</span>
+    </div>
+    <div class="solicitante">${r['Nombre del Solicitante']||'Sin nombre'}</div>
+    <div class="material">${r['Material a solicitar']||''}</div>
+    <div class="tag-row">${materialTags(r)}</div>
+    <div class="meta-row">
+      ${deadlineChip(r['Fecha de Entrega / Deadline'])}
+      <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        ${isUrgent ? '<span class="urgent-flag">⚠ Alta prioridad</span>' : ''}
+        ${!r['Responsable'] ? '<span class="badge b-other">Sin asignar</span>' : ''}
+      </span>
+    </div>
+    ${isUrgent && r['Justifique la urgencia'] ? `<div class="justif">${r['Justifique la urgencia']}</div>` : ''}
+    <button class="toggle-detail">Ver todos los datos del formulario ▾</button>
+    ${detailPanelHTML(r)}
+    <div class="edit-grid">
+      <div>
+        <label>Prioridad</label>
+        <select class="f-prioridad">
+          <option value="">—</option>
+          ${priOpts.map(p=>`<option value="${p}" ${r['Prioridad']===p?'selected':''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label>Estatus</label>
+        <select class="f-estatus">
+          ${statusOpts.map(s=>`<option value="${s}" ${estatus===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="full">
+        <label>Responsable</label>
+        <input type="text" class="f-responsable" list="responsables-${id}" value="${r['Responsable']||''}" placeholder="Asignar...">
+        <datalist id="responsables-${id}">
+          ${responsableOptions(r['Responsable']).map(o=>`<option value="${o}">`).join('')}
+        </datalist>
+      </div>
+    </div>
+    <div class="save-state"></div>
+  </div>`;
+}
+
+function attachCardHandlers(){
+  document.querySelectorAll('.card').forEach(card=>{
+    const id = card.dataset.id;
+    card.querySelector('.f-prioridad').onchange = e => pushUpdate(id,'Prioridad',e.target.value,card);
+    card.querySelector('.f-estatus').onchange = e => pushUpdate(id,'Estatus',e.target.value,card);
+    card.querySelector('.f-responsable').onblur = e => pushUpdate(id,'Responsable',e.target.value,card);
+    const toggleBtn = card.querySelector('.toggle-detail');
+    const panel = card.querySelector('.detail-panel');
+    toggleBtn.onclick = () => {
+      const open = panel.classList.toggle('open');
+      toggleBtn.textContent = open ? 'Ocultar datos del formulario ▴' : 'Ver todos los datos del formulario ▾';
+    };
+  });
+}
+
+function render(){
+  renderFilters();
+  const rows = filteredRows();
+  renderSummary(rows);
+
+  const board = document.getElementById('board');
+  if(ALL_ROWS.length === 0){
+    board.innerHTML = '<div class="empty-state">No hay solicitudes todavía.</div>';
+    return;
+  }
+
+  const grouped = {};
+  STATUS_ORDER.forEach(s=>grouped[s]=[]);
+  rows.forEach(r=>{
+    const s = STATUS_ORDER.includes(r['Estatus']) ? r['Estatus'] : 'Pendiente';
+    grouped[s].push(r);
+  });
+
+  board.innerHTML = STATUS_ORDER.map(status=>`
+    <div class="column">
+      <div class="col-head">
+        <span class="name">${status}</span>
+        <span class="count">${grouped[status].length}</span>
+      </div>
+      <div class="col-bar" style="background:${STATUS_COLORS[status]}"></div>
+      ${grouped[status].length ? grouped[status].map(cardHTML).join('') : '<div class="empty-col">Sin solicitudes</div>'}
+    </div>
+  `).join('');
+
+  attachCardHandlers();
+}
+
+document.getElementById('refreshBtn').onclick = fetchData;
+document.getElementById('searchBox').oninput = render;
+
+fetchData();
+setInterval(fetchData, 30000);
+</script>
+</body>
+</html>
